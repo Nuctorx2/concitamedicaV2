@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.concitamedica.domain.rol.Roles;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class MedicoController {
      * Solo accesible para usuarios con el rol 'PACIENTE'.
      */
     @GetMapping("/buscar")
-    @PreAuthorize("hasRole('PACIENTE')")
+    @PreAuthorize("hasRole(" + Roles.PACIENTE + ")")
     public ResponseEntity<List<MedicoResponseDTO>> buscarPorEspecialidad(
             @RequestParam Long especialidadId) {
 

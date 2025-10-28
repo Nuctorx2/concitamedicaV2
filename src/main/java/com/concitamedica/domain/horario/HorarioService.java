@@ -3,12 +3,14 @@ package com.concitamedica.domain.horario;
 import com.concitamedica.domain.horario.dto.CreacionHorarioDTO;
 import com.concitamedica.domain.medico.Medico;
 import com.concitamedica.domain.medico.MedicoRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.concitamedica.domain.horario.dto.HorarioResponseDTO;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -85,5 +87,40 @@ public class HorarioService {
 
         // 3. Si todo está en orden, eliminar el horario.
         horarioRepository.delete(horario);
+    }
+
+    /**
+     * Crea múltiples bloques de horario para un médico en una sola transacción.
+     * @param medicoId El ID del médico.
+     * @param horariosDTO La lista de DTOs de horarios a crear.
+     * @return La lista de entidades Horario recién creadas.
+     */
+    @Transactional
+    public List<Horario> crearHorariosEnLote(Long medicoId, List<CreacionHorarioDTO> horariosDTO) {
+        // 1. Buscar el médico.
+        Medico medico = medicoRepository.findById(medicoId)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado con ID: " + medicoId));
+
+        List<Horario> nuevosHorarios = new ArrayList<>();
+
+        // 2. Iterar sobre la lista de DTOs, validar y convertir cada uno.
+        for (CreacionHorarioDTO dto : horariosDTO) {
+            if (dto.horaFin().isBefore(dto.horaInicio()) || dto.horaFin().equals(dto.horaInicio())) {
+                throw new IllegalArgumentException(
+                        "Error en el horario para " + dto.diaSemana() + ": la hora de fin debe ser posterior a la de inicio."
+                );
+            }
+
+            Horario nuevoHorario = Horario.builder()
+                    .medico(medico)
+                    .diaSemana(dto.diaSemana())
+                    .horaInicio(dto.horaInicio())
+                    .horaFin(dto.horaFin())
+                    .build();
+            nuevosHorarios.add(nuevoHorario);
+        }
+
+        // 3. Guardar todos los nuevos horarios a la vez.
+        return horarioRepository.saveAll(nuevosHorarios);
     }
 }

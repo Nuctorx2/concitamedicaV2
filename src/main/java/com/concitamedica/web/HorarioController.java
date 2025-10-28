@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.concitamedica.domain.horario.dto.HorarioResponseDTO;
 import java.util.List;
+import com.concitamedica.domain.rol.Roles;
 
 @RestController
 @RequestMapping("/api/admin/medicos/{medicoId}/horarios") // ✅ URL anidada
@@ -24,7 +25,7 @@ public class HorarioController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<Horario> anadirHorario(
             @PathVariable Long medicoId,
             @Valid @RequestBody CreacionHorarioDTO datos) {
@@ -41,11 +42,29 @@ public class HorarioController {
     }
 
     /**
+     * Endpoint para añadir múltiples bloques de horario a un médico en una sola petición.
+     */
+    @PostMapping("/lote")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    public ResponseEntity<List<Horario>> anadirHorariosEnLote(
+            @PathVariable Long medicoId,
+            @Valid @RequestBody List<CreacionHorarioDTO> horariosDTO) {
+        try {
+            List<Horario> nuevosHorarios = horarioService.crearHorariosEnLote(medicoId, horariosDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevosHorarios);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
      * Endpoint para obtener todos los horarios de un médico específico.
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<List<HorarioResponseDTO>> obtenerHorariosPorMedico(@PathVariable Long medicoId) {
         try {
             List<HorarioResponseDTO> horarios = horarioService.obtenerHorariosPorMedico(medicoId);
@@ -61,7 +80,7 @@ public class HorarioController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @DeleteMapping("/{horarioId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<Void> eliminarHorario(
             @PathVariable Long medicoId,
             @PathVariable Long horarioId) {

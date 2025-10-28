@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // ✅ Habilitamos de nuevo @PreAuthorize
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .build();
     }
 
+    // ✅ ¡RESTAURAMOS EL BEAN QUE FALTABA!
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

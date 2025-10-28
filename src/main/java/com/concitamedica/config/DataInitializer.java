@@ -12,6 +12,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import static com.concitamedica.domain.rol.Roles.*;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,9 +33,9 @@ public class DataInitializer {
         // --- 1. Crear Datos Maestros (Roles y Especialidades) ---
         if (rolRepository.count() == 0) { // Solo si la tabla está vacía
             rolRepository.saveAll(List.of(
-                    new Rol("ROLE_PACIENTE"),
-                    new Rol("ROLE_MEDICO"),
-                    new Rol("ROLE_ADMIN")
+                    new Rol(ROLE_PACIENTE),
+                    new Rol(ROLE_MEDICO),
+                    new Rol(ROLE_ADMIN)
             ));
         }
         if (especialidadRepository.count() == 0) {
@@ -46,17 +48,17 @@ public class DataInitializer {
 
         // --- 2. Crear Usuarios de Prueba (si no existen) ---
         // Administrador
-        crearUsuarioSiNoExiste("Admin General", "admin@concitamedica.com", "admin123", "ROLE_ADMIN");
+        crearUsuarioSiNoExiste("Admin General", "admin@concitamedica.com", "admin123", ROLE_ADMIN);
 
         // Pacientes
-        crearUsuarioSiNoExiste("Sofia Navarro", "sofia.navarro@email.com", "paciente123", "ROLE_PACIENTE");
-        crearUsuarioSiNoExiste("Carlos Rojas", "carlos.rojas@email.com", "paciente123", "ROLE_PACIENTE");
+        crearUsuarioSiNoExiste("Sofia Navarro", "sofia.navarro@email.com", "paciente123", ROLE_PACIENTE);
+        crearUsuarioSiNoExiste("Carlos Rojas", "carlos.rojas@email.com", "paciente123", ROLE_PACIENTE);
 
         // Médicos
-        Usuario medicoUser1 = crearUsuarioSiNoExiste("Dr. Juan Pérez", "juan.perez@email.com", "medico123", "ROLE_MEDICO");
+        Usuario medicoUser1 = crearUsuarioSiNoExiste("Dr. Juan Pérez", "juan.perez@email.com", "medico123", ROLE_MEDICO);
         crearMedicoSiNoExiste(medicoUser1, "Medicina General");
 
-        Usuario medicoUser2 = crearUsuarioSiNoExiste("Dra. Ana Martínez", "ana.martinez@email.com", "medico123", "ROLE_MEDICO");
+        Usuario medicoUser2 = crearUsuarioSiNoExiste("Dra. Ana Martínez", "ana.martinez@email.com", "medico123", ROLE_MEDICO);
         crearMedicoSiNoExiste(medicoUser2, "Dermatología");
     }
 

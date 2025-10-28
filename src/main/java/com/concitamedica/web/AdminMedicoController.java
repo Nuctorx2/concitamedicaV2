@@ -15,6 +15,7 @@ import java.util.List;
 import com.concitamedica.domain.medico.dto.MedicoResponseDTO;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import com.concitamedica.domain.rol.Roles;
 
 @RestController
 @RequestMapping("/api/admin/medicos") // ✅ URL base para la administración de médicos
@@ -28,7 +29,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')") // ✅ ¡LA MAGIA DE LA SEGURIDAD!
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")") // ✅ ¡LA MAGIA DE LA SEGURIDAD!
     public ResponseEntity<Medico> crearMedico(@Valid @RequestBody CreacionMedicoDTO datos) {
         Medico medicoCreado = medicoService.crearMedico(datos);
         return ResponseEntity.status(HttpStatus.CREATED).body(medicoCreado);
@@ -39,7 +40,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<List<MedicoResponseDTO>> obtenerTodos() {
         List<MedicoResponseDTO> medicos = medicoService.obtenerTodosLosMedicos();
         return ResponseEntity.ok(medicos);
@@ -50,7 +51,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<MedicoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return medicoService.obtenerMedicoPorId(id)
                 .map(medico -> ResponseEntity.ok(medico)) // Si se encuentra, devuelve 200 OK con el médico
@@ -62,7 +63,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<MedicoResponseDTO> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizacionMedicoDTO datos) {
@@ -80,7 +81,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         medicoService.eliminarMedico(id);
         // Para una operación DELETE exitosa, se devuelve 204 No Content.

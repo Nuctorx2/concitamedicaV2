@@ -1,6 +1,7 @@
 package com.concitamedica.config;
 
 import com.concitamedica.security.JwtAuthenticationFilter;
+import com.concitamedica.security.AuthLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,11 +16,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // ✅ Habilitamos de nuevo @PreAuthorize
+@EnableMethodSecurity(prePostEnabled = true, mode = org.springframework.context.annotation.AdviceMode.PROXY, proxyTargetClass = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthLoggingFilter authLoggingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,10 +33,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(authLoggingFilter, UsernamePasswordAuthenticationFilter.class) // 👈 aquí va la nueva línea
                 .build();
     }
 
-    // ✅ ¡RESTAURAMOS EL BEAN QUE FALTABA!
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

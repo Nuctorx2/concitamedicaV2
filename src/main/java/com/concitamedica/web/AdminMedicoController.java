@@ -29,7 +29,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PostMapping
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")") // ✅ ¡LA MAGIA DE LA SEGURIDAD!
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Medico> crearMedico(@Valid @RequestBody CreacionMedicoDTO datos) {
         Medico medicoCreado = medicoService.crearMedico(datos);
         return ResponseEntity.status(HttpStatus.CREATED).body(medicoCreado);
@@ -40,7 +40,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<MedicoResponseDTO>> obtenerTodos() {
         List<MedicoResponseDTO> medicos = medicoService.obtenerTodosLosMedicos();
         return ResponseEntity.ok(medicos);
@@ -51,7 +51,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return medicoService.obtenerMedicoPorId(id)
                 .map(medico -> ResponseEntity.ok(medico)) // Si se encuentra, devuelve 200 OK con el médico
@@ -63,7 +63,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicoResponseDTO> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ActualizacionMedicoDTO datos) {
@@ -81,7 +81,7 @@ public class AdminMedicoController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         medicoService.eliminarMedico(id);
         // Para una operación DELETE exitosa, se devuelve 204 No Content.

@@ -25,7 +25,7 @@ public class HorarioController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @PostMapping
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Horario> anadirHorario(
             @PathVariable Long medicoId,
             @Valid @RequestBody CreacionHorarioDTO datos) {
@@ -45,7 +45,7 @@ public class HorarioController {
      * Endpoint para añadir múltiples bloques de horario a un médico en una sola petición.
      */
     @PostMapping("/lote")
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Horario>> anadirHorariosEnLote(
             @PathVariable Long medicoId,
             @Valid @RequestBody List<CreacionHorarioDTO> horariosDTO) {
@@ -64,7 +64,7 @@ public class HorarioController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @GetMapping
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<HorarioResponseDTO>> obtenerHorariosPorMedico(@PathVariable Long medicoId) {
         try {
             List<HorarioResponseDTO> horarios = horarioService.obtenerHorariosPorMedico(medicoId);
@@ -80,7 +80,7 @@ public class HorarioController {
      * Solo accesible para usuarios con el rol 'ADMIN'.
      */
     @DeleteMapping("/{horarioId}")
-    @PreAuthorize("hasRole(" + Roles.ADMIN + ")")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarHorario(
             @PathVariable Long medicoId,
             @PathVariable Long horarioId) {

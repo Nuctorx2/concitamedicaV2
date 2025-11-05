@@ -20,7 +20,7 @@ public class PacienteController {
     private final PacienteService pacienteService;
 
     @GetMapping("/medicos/{medicoId}/disponibilidad")
-    @PreAuthorize("hasRole(" + Roles.PACIENTE + ")")
+    @PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<List<DisponibilidadDTO>> obtenerDisponibilidad(
             @PathVariable Long medicoId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {

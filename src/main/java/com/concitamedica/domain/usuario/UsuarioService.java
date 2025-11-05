@@ -28,29 +28,25 @@ public class UsuarioService implements UserDetailsService{
      * @param datosRegistro DTO con la información del nuevo usuario.
      * @return La entidad Usuario que fue guardada en la base de datos.
      */
-    @Transactional // Indica que este método es una transacción. Si algo falla, se revierte todo.
-    public Usuario registrarPaciente(RegistroUsuarioDTO datosRegistro) {
-        // 1. Validar que el email no esté en uso.
+    @Transactional
+    public Usuario registrarUsuario(RegistroUsuarioDTO datosRegistro) {
         if (usuarioRepository.findByEmail(datosRegistro.email()).isPresent()) {
-            // Es mejor lanzar una excepción específica, pero por ahora esto funciona.
             throw new IllegalStateException("El correo electrónico ya está en uso.");
         }
 
-        // 2. Buscar el rol "ROLE_PACIENTE".
-        Rol rolPaciente = rolRepository.findByNombre("ROLE_ADMIN")
-                .orElseThrow(() -> new IllegalStateException("El rol de Paciente no existe en la base de datos."));
+        String nombreRol = "ROLE_" + datosRegistro.rol().toUpperCase();
 
-        // 3. Crear la nueva entidad Usuario.
+        Rol rol = rolRepository.findByNombre(nombreRol)
+                .orElseThrow(() -> new IllegalStateException("El rol" + nombreRol + " de Paciente no existe en la base de datos."));
+
         Usuario nuevoUsuario = Usuario.builder()
                 .nombre(datosRegistro.nombre())
                 .email(datosRegistro.email())
                 .password(passwordEncoder.encode(datosRegistro.password()))
                 .fechaNacimiento(datosRegistro.fechaNacimiento())
                 .genero(datosRegistro.genero())
-                .rol(rolPaciente)
+                .rol(rol)
                 .build();
-
-        // 4. Guardar en la base de datos y retornar el usuario guardado.
         return usuarioRepository.save(nuevoUsuario);
     }
 

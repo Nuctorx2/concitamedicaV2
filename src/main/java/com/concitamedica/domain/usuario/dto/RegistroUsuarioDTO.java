@@ -27,5 +27,8 @@ public record RegistroUsuarioDTO(
         LocalDate fechaNacimiento,
 
         @NotBlank(message = "El género no puede estar en blanco.")
-        String genero
+        String genero,
+
+        @NotBlank (message = "El rol no puede estar en blanco.")
+        String rol
 ) {}

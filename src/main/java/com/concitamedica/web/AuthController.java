@@ -18,7 +18,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.concitamedica.domain.rol.Roles;
 
 /**
  * Controlador REST para manejar las operaciones de autenticación como registro y login.
@@ -39,12 +38,8 @@ public class AuthController {
      * @return Una respuesta HTTP con el usuario creado y un estado 201 (Created).
      */
     @PostMapping("/register")
-    public ResponseEntity<Usuario> registrarPaciente(@Valid @RequestBody RegistroUsuarioDTO datosRegistro) {
-        // 1. Delega la lógica de negocio al servicio.
-        Usuario nuevoUsuario = usuarioService.registrarPaciente(datosRegistro);
-
-        // 2. Construye y retorna una respuesta HTTP.
-        // HttpStatus.CREATED es el código 201, la respuesta estándar para una creación exitosa.
+    public ResponseEntity<Usuario> registrar(@Valid @RequestBody RegistroUsuarioDTO datosRegistro) {
+        Usuario nuevoUsuario = usuarioService.registrarUsuario(datosRegistro);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
     }
 

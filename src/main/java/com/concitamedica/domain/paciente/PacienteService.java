@@ -32,7 +32,7 @@ public class PacienteService {
         }
 
         // 2. Encontrar el horario de trabajo del médico para ese día de la semana
-        DiaSemana dia = DiaSemana.valueOf(fecha.getDayOfWeek().name());
+        DiaSemana dia = DiaSemana.from(fecha);
         Optional<Horario> horarioLaboralOpt = horarioRepository.findByMedicoIdAndDiaSemana(medicoId, dia);
 
         if (horarioLaboralOpt.isEmpty()) {

@@ -25,7 +25,7 @@ public class MedicoController {
      * Solo accesible para usuarios con el rol 'PACIENTE'.
      */
     @GetMapping("/buscar")
-    @PreAuthorize("hasRole(" + Roles.PACIENTE + ")")
+    @PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<List<MedicoResponseDTO>> buscarPorEspecialidad(
             @RequestParam Long especialidadId) {
 

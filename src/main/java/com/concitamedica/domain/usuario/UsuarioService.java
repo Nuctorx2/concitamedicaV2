@@ -56,11 +56,18 @@ public class UsuarioService implements UserDetailsService{
         Usuario usuario = usuarioRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + username));
 
+        String roleName = usuario.getRol().getNombre();
+
+        // Quita el prefijo "ROLE_" si existe
+        if (roleName.startsWith("ROLE_")) {
+            roleName = roleName.substring(5);
+        }
+
         return new User(
                 usuario.getEmail(),
                 usuario.getPassword(),
                 true, true, true, true, // Opciones de cuenta (habilitada, etc.)
-                Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().getNombre()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + roleName))
         );
     }
 }

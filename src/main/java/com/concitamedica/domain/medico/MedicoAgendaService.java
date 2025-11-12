@@ -1,10 +1,7 @@
 package com.concitamedica.domain.medico;
 
-import com.concitamedica.domain.cita.Cita;
 import com.concitamedica.domain.cita.CitaRepository;
 import com.concitamedica.domain.cita.dto.CitaMedicoResponseDTO;
-import com.concitamedica.domain.medico.Medico;
-import com.concitamedica.domain.medico.MedicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

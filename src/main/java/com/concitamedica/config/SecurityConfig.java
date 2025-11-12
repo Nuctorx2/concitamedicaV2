@@ -33,7 +33,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(authLoggingFilter, UsernamePasswordAuthenticationFilter.class) // 👈 aquí va la nueva línea
+                .addFilterAfter(authLoggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

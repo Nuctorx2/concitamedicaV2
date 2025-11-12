@@ -16,6 +16,9 @@ import com.concitamedica.domain.usuario.Usuario;
 import com.concitamedica.domain.usuario.UsuarioRepository;
 import com.concitamedica.domain.medico.Medico;
 
+import com.concitamedica.domain.cita.dto.CitaResponseDTO;
+import java.util.stream.Collectors;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -117,5 +120,33 @@ public class PacienteService {
                 citaGuardada.getFechaHoraFin(),
                 citaGuardada.getEstado().name()
         );
+    }
+
+    /**
+     * Obtiene las próximas citas de un paciente autenticado.
+     * @param emailPaciente El email del paciente extraído del token.
+     * @return Una lista de DTOs de las próximas citas.
+     */
+    @Transactional(readOnly = true)
+    public List<CitaResponseDTO> obtenerProximasCitas(String emailPaciente) {
+        // 1. Obtener la entidad del paciente
+        Usuario paciente = usuarioRepository.findByEmail(emailPaciente)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+
+        // 2. Buscar las citas usando el nuevo método del repositorio
+        return citaRepository.findAllByPacienteIdAndFechaHoraInicioAfterOrderByFechaHoraInicioAsc(
+                        paciente.getId(),
+                        LocalDateTime.now()
+                )
+                .stream()
+                .map(cita -> new CitaResponseDTO( // Mapeo directo a DTO
+                        cita.getId(),
+                        cita.getMedico().getId(),
+                        cita.getMedico().getUsuario().getNombre(),
+                        cita.getFechaHoraInicio(),
+                        cita.getFechaHoraFin(),
+                        cita.getEstado().name()
+                ))
+                .collect(Collectors.toList());
     }
 }

@@ -5,6 +5,7 @@ import com.concitamedica.domain.paciente.PacienteService;
 import com.concitamedica.domain.paciente.dto.DisponibilidadDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/pacientes")
 @RequiredArgsConstructor
 public class PacienteController {
@@ -55,5 +57,18 @@ public class PacienteController {
             // Capturamos el error si el horario ya no está disponible
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409 Conflict
         }
+    }
+
+    /**
+     * Endpoint para que un paciente vea su lista de próximas citas.
+     */
+    @GetMapping("/citas/proximas")
+    @PreAuthorize("hasRole('PACIENTE')")
+    public ResponseEntity<List<CitaResponseDTO>> obtenerProximasCitas(Authentication authentication) {
+        String emailPaciente = authentication.getName();
+        log.info("Iniciando búsqueda de próximas citas para paciente: {}", emailPaciente);
+        List<CitaResponseDTO> proximasCitas = pacienteService.obtenerProximasCitas(emailPaciente);
+        log.debug("Se encontraron {} citas para el paciente: {}", proximasCitas.size(), emailPaciente);
+        return ResponseEntity.ok(proximasCitas);
     }
 }

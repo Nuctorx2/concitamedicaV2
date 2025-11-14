@@ -16,7 +16,6 @@ import com.concitamedica.domain.usuario.Usuario;
 import com.concitamedica.domain.usuario.UsuarioRepository;
 import com.concitamedica.domain.medico.Medico;
 
-import com.concitamedica.domain.cita.dto.CitaResponseDTO;
 import java.util.stream.Collectors;
 
 import java.time.LocalDate;

@@ -1,31 +1,18 @@
 package com.concitamedica.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Configuración global de CORS para permitir la comunicación
- * entre el frontend (Vue.js) y el backend (Spring Boot).
- *
- * Esta configuración es válida para entornos de desarrollo.
- * En producción se recomienda restringir los orígenes permitidos.
- */
-@Configuration
-public class CorsConfigurer {
+@Configuration // <-- 1. Sigue siendo una clase de configuración
+public class CorsConfigurer implements WebMvcConfigurer { // <-- 2. PERO AHORA, implementa WebMvcConfigurer
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Aplica a todos los endpoints
-                        .allowedOrigins("http://localhost:5173") // URL del frontend en desarrollo
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos HTTP permitidos
-                        .allowedHeaders("*") // Permitir cualquier cabecera
-                        .allowCredentials(true); // Permitir envío de credenciales (cookies, JWT)
-            }
-        };
+    @Override // <-- 3. Y simplemente sobrescribe el método
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**") // Aplica a todas las rutas de tu API
+                .allowedOrigins("http://localhost:5173") // La URL de tu app Vue.js
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
+                .allowedHeaders("*") // Permite todas las cabeceras (incluyendo "Authorization")
+                .allowCredentials(true); // ¡Crucial para que funcionen las cookies/tokens!
     }
 }

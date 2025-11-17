@@ -24,9 +24,8 @@ public class UsuarioService implements UserDetailsService{
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Registra un nuevo usuario con el rol de PACIENTE.
-     * @param datosRegistro DTO con la información del nuevo usuario.
-     * @return La entidad Usuario que fue guardada en la base de datos.
+     * Registra un nuevo usuario forzando el rol de PACIENTE.
+     * SEGURIDAD: Ignoramos el campo 'rol' del DTO para evitar elevación de privilegios.
      */
     @Transactional
     public Usuario registrarUsuario(RegistroUsuarioDTO datosRegistro) {
@@ -34,10 +33,11 @@ public class UsuarioService implements UserDetailsService{
             throw new IllegalStateException("El correo electrónico ya está en uso.");
         }
 
-        String nombreRol = "ROLE_" + datosRegistro.rol().toUpperCase();
+        // 🔒 HARDCODED: Siempre asignamos ROLE_PACIENTE en el registro público
+        String nombreRol = "ROLE_PACIENTE";
 
         Rol rol = rolRepository.findByNombre(nombreRol)
-                .orElseThrow(() -> new IllegalStateException("El rol" + nombreRol + " de Paciente no existe en la base de datos."));
+                .orElseThrow(() -> new IllegalStateException("El rol " + nombreRol + " no existe en la BDD."));
 
         Usuario nuevoUsuario = Usuario.builder()
                 .nombre(datosRegistro.nombre())
@@ -50,24 +50,26 @@ public class UsuarioService implements UserDetailsService{
         return usuarioRepository.save(nuevoUsuario);
     }
 
+    /**
+     * Método auxiliar para obtener la entidad completa del usuario.
+     * Se usará en el endpoint /me.
+     */
+    @Transactional(readOnly = true)
+    public Usuario buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + username));
-
-        String roleName = usuario.getRol().getNombre();
-
-        // Quita el prefijo "ROLE_" si existe
-        if (roleName.startsWith("ROLE_")) {
-            roleName = roleName.substring(5);
-        }
+        Usuario usuario = buscarPorEmail(username); // Reutilizamos el método
 
         return new User(
                 usuario.getEmail(),
                 usuario.getPassword(),
-                true, true, true, true, // Opciones de cuenta (habilitada, etc.)
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + roleName))
+                true, true, true, true,
+                Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().getNombre()))
         );
     }
 }

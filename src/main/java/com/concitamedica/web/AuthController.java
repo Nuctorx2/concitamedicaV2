@@ -3,6 +3,7 @@ package com.concitamedica.web;
 import com.concitamedica.domain.usuario.Usuario;
 import com.concitamedica.domain.usuario.UsuarioService;
 import com.concitamedica.domain.usuario.dto.RegistroUsuarioDTO;
+import com.concitamedica.domain.usuario.dto.UsuarioResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,13 @@ public class AuthController {
         String token = jwtService.generateToken(userDetails);
 
         return ResponseEntity.ok(new LoginResponseDTO(token));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> obtenerUsuarioActual(Authentication authentication) {
+        // authentication.getName() obtiene el email del token JWT
+        Usuario usuario = usuarioService.buscarPorEmail(authentication.getName());
+        return ResponseEntity.ok(new UsuarioResponseDTO(usuario));
     }
 
     @GetMapping("/test")

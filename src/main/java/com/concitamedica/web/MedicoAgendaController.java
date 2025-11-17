@@ -2,7 +2,6 @@ package com.concitamedica.web;
 
 import com.concitamedica.domain.cita.dto.CitaMedicoResponseDTO;
 import com.concitamedica.domain.medico.MedicoAgendaService;
-import com.concitamedica.domain.rol.Roles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

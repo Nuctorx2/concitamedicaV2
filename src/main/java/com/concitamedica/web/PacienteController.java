@@ -10,8 +10,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.concitamedica.domain.rol.Roles;
-import com.concitamedica.domain.cita.Cita;
 import com.concitamedica.domain.paciente.dto.AgendarCitaDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;

@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 public record CitaResponseDTO(
         Long id,
         Long medicoId,
-        String nombreMedico,
+        String nombreMedico, // Nombre + Apellido
+        String especialidad,
         LocalDateTime fechaHoraInicio,
         LocalDateTime fechaHoraFin,
         String estado

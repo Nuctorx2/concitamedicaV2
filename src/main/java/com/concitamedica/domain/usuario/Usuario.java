@@ -33,6 +33,21 @@ public class Usuario extends Auditable {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    @NotBlank(message = "El apellido no puede estar en blanco.") // Validación: no nulo y no vacío.
+    @Size(min = 2, max = 100, message = "El apellido debe tener entre 2 y 100 caracteres.")
+    @Column(nullable = false, length = 100)
+    private String apellido;
+
+
+    @NotBlank(message = "El número de documento no puede estar vacío")
+    @Size(min = 8, max = 10, message = "El número de documento debe tener entre 8 y 10 caracteres.")
+    @Column(nullable = false, length = 10)
+    private String documento;
+
+    private String telefono;
+
+    private String direccion;
+
     @NotBlank(message = "El email no puede estar en blanco.")
     @Email(message = "El formato del email no es válido.")
     @Column(nullable = false, unique = true, length = 100)

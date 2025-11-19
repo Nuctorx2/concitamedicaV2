@@ -20,7 +20,5 @@ public class Especialidad extends Auditable {
     @Column(nullable = false, unique = true, length = 100)
     private String nombre; // Ej: "Medicina General", "Odontología"
 
-    public Especialidad(String nombre) {
-        this.nombre = nombre;
-    }
+    private String descripcion;
 }

@@ -2,6 +2,9 @@ package com.concitamedica.config;
 
 import com.concitamedica.domain.especialidad.Especialidad;
 import com.concitamedica.domain.especialidad.EspecialidadRepository;
+import com.concitamedica.domain.horario.DiaSemana;
+import com.concitamedica.domain.horario.Horario;
+import com.concitamedica.domain.horario.HorarioRepository;
 import com.concitamedica.domain.medico.Medico;
 import com.concitamedica.domain.medico.MedicoRepository;
 import com.concitamedica.domain.rol.Rol;
@@ -12,11 +15,13 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import static com.concitamedica.domain.rol.Roles.*;
-
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+
+import static com.concitamedica.domain.rol.Roles.*;
 
 @Component
 @RequiredArgsConstructor
@@ -26,66 +31,114 @@ public class DataInitializer {
     private final EspecialidadRepository especialidadRepository;
     private final UsuarioRepository usuarioRepository;
     private final MedicoRepository medicoRepository;
+    private final HorarioRepository horarioRepository;
     private final PasswordEncoder passwordEncoder;
 
     @PostConstruct
+    @Transactional
     public void init() {
-        // --- 1. Crear Datos Maestros (Roles y Especialidades) ---
-        if (rolRepository.count() == 0) { // Solo si la tabla está vacía
-            rolRepository.saveAll(List.of(
-                    new Rol(ROLE_PACIENTE),
-                    new Rol(ROLE_MEDICO),
-                    new Rol(ROLE_ADMIN)
-            ));
-        }
-        if (especialidadRepository.count() == 0) {
-            especialidadRepository.saveAll(List.of(
-                    new Especialidad("Medicina General"),
-                    new Especialidad("Odontología"),
-                    new Especialidad("Dermatología")
-            ));
-        }
+        crearRoles();
+        crearEspecialidades();
 
-        // --- 2. Crear Usuarios de Prueba (si no existen) ---
-        // Administrador
-        crearUsuarioSiNoExiste("Admin General", "admin@concitamedica.com", "admin123", ROLE_ADMIN);
+        Rol rolAdmin = rolRepository.findByNombre(ROLE_ADMIN).orElseThrow();
+        Rol rolMedico = rolRepository.findByNombre(ROLE_MEDICO).orElseThrow();
+        Rol rolPaciente = rolRepository.findByNombre(ROLE_PACIENTE).orElseThrow();
 
-        // Pacientes
-        crearUsuarioSiNoExiste("Sofia Navarro", "sofia.navarro@email.com", "paciente123", ROLE_PACIENTE);
-        crearUsuarioSiNoExiste("Carlos Rojas", "carlos.rojas@email.com", "paciente123", ROLE_PACIENTE);
+        // --- 1. ADMIN ---
+        crearUsuarioSiNoExiste("Admin", "Sistema", "99999999", "admin@concitamedica.com", "admin123", rolAdmin);
 
-        // Médicos
-        Usuario medicoUser1 = crearUsuarioSiNoExiste("Dr. Juan Pérez", "juan.perez@email.com", "medico123", ROLE_MEDICO);
-        crearMedicoSiNoExiste(medicoUser1, "Medicina General");
+        // --- 2. PACIENTES ---
+        crearUsuarioSiNoExiste("Sofia", "Navarro", "10000001", "sofia.navarro@email.com", "paciente123", rolPaciente);
+        crearUsuarioSiNoExiste("Carlos", "Rojas", "10000002", "carlos.rojas@email.com", "paciente123", rolPaciente);
 
-        Usuario medicoUser2 = crearUsuarioSiNoExiste("Dra. Ana Martínez", "ana.martinez@email.com", "medico123", ROLE_MEDICO);
-        crearMedicoSiNoExiste(medicoUser2, "Dermatología");
+        // --- 3. MÉDICOS (2 por especialidad) ---
+        // ✅ AHORA PASAMOS DOCUMENTOS VÁLIDOS (8 dígitos)
+
+        // Especialidad: Medicina General
+        crearMedicoConHorario("Juan", "Pérez", "20000001", "juan.perez@email.com", "Medicina General", rolMedico);
+        crearMedicoConHorario("Laura", "Gómez", "20000002", "laura.gomez@email.com", "Medicina General", rolMedico);
+
+        // Especialidad: Odontología
+        crearMedicoConHorario("Pedro", "Sánchez", "30000001", "pedro.sanchez@email.com", "Odontología", rolMedico);
+        crearMedicoConHorario("Lucía", "Díaz", "30000002", "lucia.diaz@email.com", "Odontología", rolMedico);
+
+        // Especialidad: Dermatología
+        crearMedicoConHorario("Ana", "Martínez", "40000001", "ana.martinez@email.com", "Dermatología", rolMedico);
+        crearMedicoConHorario("Roberto", "Fernández", "40000002", "roberto.fernandez@email.com", "Dermatología", rolMedico);
     }
 
-    private Usuario crearUsuarioSiNoExiste(String nombre, String email, String password, String nombreRol) {
+    // --- MÉTODOS AUXILIARES ---
+
+    private void crearRoles() {
+        if (rolRepository.count() == 0) {
+            rolRepository.saveAll(List.of(new Rol(ROLE_PACIENTE), new Rol(ROLE_MEDICO), new Rol(ROLE_ADMIN)));
+        }
+    }
+
+    private void crearEspecialidades() {
+        if (especialidadRepository.count() == 0) {
+            especialidadRepository.saveAll(List.of(
+                    Especialidad.builder().nombre("Medicina General").descripcion("Atención primaria.").build(),
+                    Especialidad.builder().nombre("Odontología").descripcion("Cuidado oral.").build(),
+                    Especialidad.builder().nombre("Dermatología").descripcion("Cuidado de la piel.").build()
+            ));
+        }
+    }
+
+    private Usuario crearUsuarioSiNoExiste(String nombre, String apellido, String documento, String email, String password, Rol rol) {
         return usuarioRepository.findByEmail(email).orElseGet(() -> {
-            Rol rol = rolRepository.findByNombre(nombreRol).orElseThrow();
             Usuario nuevoUsuario = Usuario.builder()
                     .nombre(nombre)
+                    .apellido(apellido)
+                    .documento(documento) // Usamos el documento explícito que pasamos
+                    .telefono("555-0000")
+                    .direccion("Consultorio Central")
                     .email(email)
-                    .password(passwordEncoder.encode(password)) // ¡Aquí está la magia!
-                    .fechaNacimiento(LocalDate.of(1990, 1, 1))
-                    .genero("N/A")
+                    .password(passwordEncoder.encode(password))
+                    .fechaNacimiento(LocalDate.of(1985, 1, 1))
+                    .genero("OTRO")
                     .rol(rol)
                     .build();
             return usuarioRepository.save(nuevoUsuario);
         });
     }
 
-    private void crearMedicoSiNoExiste(Usuario usuario, String nombreEspecialidad) {
-        // Asumimos que no puede haber un perfil de médico sin un usuario
+    // 👇 MÉTODO ACTUALIZADO: Ahora recibe 'documento'
+    private void crearMedicoConHorario(String nombre, String apellido, String documento, String email, String especialidadNombre, Rol rolMedico) {
+        // 1. Crear Usuario
+        Usuario usuario = crearUsuarioSiNoExiste(nombre, apellido, documento, email, "medico123", rolMedico);
+
+        // 2. Crear Perfil Médico (si no existe)
         if (medicoRepository.findByUsuario(usuario).isEmpty()) {
-            Especialidad especialidad = especialidadRepository.findByNombre(nombreEspecialidad).orElseThrow();
-            Medico nuevoMedico = Medico.builder()
+            Especialidad especialidad = especialidadRepository.findByNombre(especialidadNombre).orElseThrow();
+
+            Medico medico = Medico.builder()
                     .usuario(usuario)
                     .especialidad(especialidad)
                     .build();
-            medicoRepository.save(nuevoMedico);
+
+            medico = medicoRepository.save(medico);
+
+            // 3. Asignar Horarios
+            asignarHorarioBase(medico);
+        }
+    }
+
+    private void asignarHorarioBase(Medico medico) {
+        List<DiaSemana> diasLaborables = List.of(
+                DiaSemana.LUNES, DiaSemana.MARTES, DiaSemana.MIERCOLES, DiaSemana.JUEVES, DiaSemana.VIERNES
+        );
+
+        for (DiaSemana dia : diasLaborables) {
+            if (horarioRepository.findByMedicoIdAndDiaSemana(medico.getId(), dia).isEmpty()) {
+                Horario horario = Horario.builder()
+                        .medico(medico)
+                        .diaSemana(dia)
+                        .horaInicio(LocalTime.of(8, 0))  // 08:00 AM
+                        .horaFin(LocalTime.of(17, 0))    // 05:00 PM
+                        .build();
+                horarioRepository.save(horario);
+            }
         }
     }
 }

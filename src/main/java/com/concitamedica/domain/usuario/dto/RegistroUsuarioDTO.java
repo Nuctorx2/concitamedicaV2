@@ -15,6 +15,11 @@ public record RegistroUsuarioDTO(
         @NotBlank(message = "El nombre no puede estar en blanco.")
         String nombre,
 
+        @NotBlank String apellido,
+        @NotBlank String documento,
+        @NotBlank String telefono,
+        String direccion,
+
         @NotBlank(message = "El email no puede estar en blanco.")
         @Email(message = "El formato del email no es válido.")
         String email,

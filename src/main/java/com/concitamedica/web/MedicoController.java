@@ -14,7 +14,7 @@ import com.concitamedica.domain.rol.Roles;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/medicos") // ✅ URL base para la consulta de médicos
+@RequestMapping("/api/medicos")
 @RequiredArgsConstructor
 public class MedicoController {
 
@@ -25,7 +25,7 @@ public class MedicoController {
      * Solo accesible para usuarios con el rol 'PACIENTE'.
      */
     @GetMapping("/buscar")
-    @PreAuthorize("hasRole('PACIENTE')")
+    @PreAuthorize("hasAnyRole('PACIENTE', 'ADMIN', 'MEDICO')")
     public ResponseEntity<List<MedicoResponseDTO>> buscarPorEspecialidad(
             @RequestParam Long especialidadId) {
 

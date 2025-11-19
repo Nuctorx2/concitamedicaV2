@@ -12,6 +12,10 @@ import java.time.LocalDate;
  */
 public record CreacionMedicoDTO(
         @NotBlank String nombre,
+        @NotBlank String apellido,
+        @NotBlank String documento,
+        @NotBlank String telefono,
+        @NotBlank String direccion,
         @NotBlank @Email String email,
         @NotBlank @Size(min = 8) String password,
         @NotNull LocalDate fechaNacimiento,

@@ -41,6 +41,10 @@ public class UsuarioService implements UserDetailsService{
 
         Usuario nuevoUsuario = Usuario.builder()
                 .nombre(datosRegistro.nombre())
+                .apellido(datosRegistro.apellido())
+                .documento(datosRegistro.documento())
+                .telefono(datosRegistro.telefono())
+                .direccion(datosRegistro.direccion())
                 .email(datosRegistro.email())
                 .password(passwordEncoder.encode(datosRegistro.password()))
                 .fechaNacimiento(datosRegistro.fechaNacimiento())

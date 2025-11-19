@@ -50,6 +50,10 @@ public class MedicoService {
         // 3. Crear y guardar la entidad Usuario
         Usuario nuevoUsuario = Usuario.builder()
                 .nombre(datos.nombre())
+                .apellido(datos.apellido())
+                .documento(datos.documento())
+                .telefono(datos.telefono())
+                .direccion(datos.direccion())
                 .email(datos.email())
                 .password(passwordEncoder.encode(datos.password()))
                 .fechaNacimiento(datos.fechaNacimiento())

@@ -16,6 +16,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.concitamedica.domain.usuario.dto.PerfilUpdateDTO;
+import com.concitamedica.domain.usuario.dto.UsuarioResponseDTO;
 
 /**
  * Controlador REST para manejar las operaciones de autenticación como registro y login.
@@ -69,5 +71,16 @@ public class AuthController {
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
         return ResponseEntity.ok("¡El backend responde!");
+    }
+
+    @PutMapping("/perfil")
+    public ResponseEntity<UsuarioResponseDTO> actualizarPerfil(
+            @RequestBody @Valid PerfilUpdateDTO datos,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        Usuario usuarioActualizado = usuarioService.actualizarPerfil(email, datos);
+
+        return ResponseEntity.ok(new UsuarioResponseDTO(usuarioActualizado));
     }
 }

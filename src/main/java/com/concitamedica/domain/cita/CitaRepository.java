@@ -22,5 +22,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     List<Cita> findAllByPacienteIdAndFechaHoraInicioBetween(
             Long pacienteId, LocalDateTime inicio, LocalDateTime fin
     );
+
+    List<Cita> findAllByOrderByFechaHoraInicioDesc();
 }
 

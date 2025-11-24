@@ -2,6 +2,7 @@ package com.concitamedica.domain.usuario;
 
 import com.concitamedica.domain.rol.Rol;
 import com.concitamedica.domain.rol.RolRepository;
+import com.concitamedica.domain.usuario.dto.PerfilUpdateDTO;
 import com.concitamedica.domain.usuario.dto.RegistroUsuarioDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -75,5 +76,21 @@ public class UsuarioService implements UserDetailsService{
                 true, true, true, true,
                 Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().getNombre()))
         );
+    }
+
+    @Transactional
+    public Usuario actualizarPerfil(String email, PerfilUpdateDTO datos) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setNombre(datos.nombre());
+        usuario.setApellido(datos.apellido());
+        usuario.setDocumento(datos.documento());
+        usuario.setTelefono(datos.telefono());
+        usuario.setDireccion(datos.direccion());
+        usuario.setFechaNacimiento(datos.fechaNacimiento());
+        usuario.setGenero(datos.genero());
+
+        return usuarioRepository.save(usuario);
     }
 }

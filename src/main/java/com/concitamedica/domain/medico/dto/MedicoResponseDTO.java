@@ -1,12 +1,17 @@
 package com.concitamedica.domain.medico.dto;
 
-/**
- * DTO para exponer la información pública de un Médico.
- * Es una "vista" segura de la entidad Medico, sin exponer datos sensibles como contraseñas.
- */
+import java.time.LocalDate;
+
 public record MedicoResponseDTO(
-        Long id,          // El ID de la entidad Medico
+        Long id,
         String nombre,
+        String apellido,
         String email,
-        String especialidadNombre
+        String documento,
+        String telefono,
+        String direccion,
+        LocalDate fechaNacimiento,
+        String genero,
+        String especialidadNombre,
+        Long especialidadId
 ) {}

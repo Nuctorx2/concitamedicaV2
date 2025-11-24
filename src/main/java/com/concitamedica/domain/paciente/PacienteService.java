@@ -58,6 +58,7 @@ public class PacienteService {
         LocalDateTime finDelDia = fecha.atTime(LocalTime.MAX);
         List<Cita> citasAgendadas = citaRepository.findAllByMedicoIdAndFechaHoraInicioBetween(medicoId, inicioDelDia, finDelDia);
         List<LocalTime> horasOcupadas = citasAgendadas.stream()
+                .filter(cita -> cita.getEstado() == EstadoCita.AGENDADA)
                 .map(cita -> cita.getFechaHoraInicio().toLocalTime())
                 .toList();
 
@@ -111,6 +112,7 @@ public class PacienteService {
 
         // Iteramos una sola vez sobre las citas del día para validar MÚLTIPLES reglas
         for (Cita citaExistente : citasDelDia) {
+            if (citaExistente.getEstado() != EstadoCita.AGENDADA) continue;
 
             // 1. Regla de Ubicuidad (Mejorada: Detectar Superposición de horarios)
             // Si la nueva cita empieza antes de que termine la actual Y la nueva termina después de que empiece la actual
@@ -155,7 +157,9 @@ public class PacienteService {
         return new CitaResponseDTO(
                 citaGuardada.getId(),
                 medico.getId(),
+                paciente.getId(),
                 medico.getUsuario().getNombre() + " " + medico.getUsuario().getApellido(),
+                paciente.getNombre() + " " + paciente.getApellido(),
                 medico.getEspecialidad().getNombre(),
                 citaGuardada.getFechaHoraInicio(),
                 citaGuardada.getFechaHoraFin(),
@@ -187,7 +191,9 @@ public class PacienteService {
                     return new CitaResponseDTO(
                             cita.getId(),
                             cita.getMedico().getId(),
+                            cita.getPaciente().getId(),
                             nombreCompletoMedico,
+                            cita.getPaciente().getNombre() + " " + cita.getPaciente().getApellido(),
                             cita.getMedico().getEspecialidad().getNombre(),
                             cita.getFechaHoraInicio(),
                             cita.getFechaHoraFin(),
@@ -220,7 +226,7 @@ public class PacienteService {
                 .apellido(datos.apellido())
                 .email(datos.email())
                 // Si no envían password, usamos el documento o una genérica
-                .password(passwordEncoder.encode(datos.password() != null ? datos.password() : "12345678"))
+                .password(passwordEncoder.encode(datos.password() != null ? datos.documento() : "12345678"))
                 .documento(datos.documento())
                 .telefono(datos.telefono())
                 .direccion(datos.direccion())

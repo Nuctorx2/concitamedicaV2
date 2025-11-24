@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, String>> handleBusinessException(IllegalStateException e) {
         Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("message", e.getMessage()); // 👈 Aquí va el texto específico
+        errorResponse.put("message", e.getMessage());
         errorResponse.put("error", "Conflict");
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);

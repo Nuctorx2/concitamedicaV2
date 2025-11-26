@@ -24,10 +24,6 @@ public class AdminMedicoController {
 
     private final MedicoService medicoService;
 
-    /**
-     * Endpoint para crear un nuevo perfil de Médico.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Medico> crearMedico(@Valid @RequestBody CreacionMedicoDTO datos) {
@@ -35,10 +31,6 @@ public class AdminMedicoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(medicoCreado);
     }
 
-    /**
-     * Endpoint para obtener una lista de todos los médicos.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<MedicoResponseDTO>> obtenerTodos() {
@@ -46,10 +38,6 @@ public class AdminMedicoController {
         return ResponseEntity.ok(medicos);
     }
 
-    /**
-     * Endpoint para obtener los detalles de un médico específico por su ID.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicoResponseDTO> obtenerPorId(@PathVariable Long id) {
@@ -58,10 +46,6 @@ public class AdminMedicoController {
                 .orElse(ResponseEntity.notFound().build()); // Si no, devuelve un 404 Not Found
     }
 
-    /**
-     * Endpoint para actualizar un médico existente.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicoResponseDTO> actualizar(
@@ -76,15 +60,19 @@ public class AdminMedicoController {
         }
     }
 
-    /**
-     * Endpoint para eliminar un médico por su ID.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         medicoService.eliminarMedico(id);
         // Para una operación DELETE exitosa, se devuelve 204 No Content.
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> reactivarMedico(@PathVariable Long id) {
+        medicoService.reactivarMedico(id);
         return ResponseEntity.noContent().build();
     }
 }

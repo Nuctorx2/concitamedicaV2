@@ -73,7 +73,8 @@ public class UsuarioService implements UserDetailsService{
         return new User(
                 usuario.getEmail(),
                 usuario.getPassword(),
-                true, true, true, true,
+                usuario.isEnabled(),
+                true, true, true,
                 Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().getNombre()))
         );
     }

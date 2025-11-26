@@ -13,5 +13,6 @@ public record MedicoResponseDTO(
         LocalDate fechaNacimiento,
         String genero,
         String especialidadNombre,
-        Long especialidadId
+        Long especialidadId,
+        boolean activo
 ) {}

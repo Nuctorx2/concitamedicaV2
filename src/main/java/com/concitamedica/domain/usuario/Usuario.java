@@ -8,8 +8,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Entidad que representa la tabla 'usuarios' en la base de datos.
@@ -21,19 +26,19 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // Patrón de diseño para construir objetos de forma más legible.
-public class Usuario extends Auditable {
+@Builder
+public class Usuario extends Auditable implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "El nombre no puede estar en blanco.") // Validación: no nulo y no vacío.
+    @NotBlank(message = "El nombre no puede estar en blanco.")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres.")
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @NotBlank(message = "El apellido no puede estar en blanco.") // Validación: no nulo y no vacío.
+    @NotBlank(message = "El apellido no puede estar en blanco.")
     @Size(min = 2, max = 100, message = "El apellido debe tener entre 2 y 100 caracteres.")
     @Column(nullable = false, length = 100)
     private String apellido;
@@ -56,7 +61,7 @@ public class Usuario extends Auditable {
     @NotBlank(message = "La contraseña no puede estar en blanco.")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.")
     @Column(name = "password_hash", nullable = false)
-    private String password; // Se almacenará el hash, no la contraseña en texto plano.
+    private String password;
 
     @NotNull(message = "La fecha de nacimiento no puede ser nula.")
     @Column(name = "fecha_nacimiento", nullable = false)
@@ -66,10 +71,51 @@ public class Usuario extends Auditable {
     @Column(nullable = false, length = 20)
     private String genero;
 
-    // --- Relaciones con otras entidades ---
-
     @NotNull(message = "El usuario debe tener un rol asignado.")
-    @ManyToOne(fetch = FetchType.EAGER) // Indica una relación de muchos a uno (muchos usuarios pueden tener un rol).
-    @JoinColumn(name = "rol_id", referencedColumnName = "id", nullable = false) // Define la columna de la clave foránea.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rol_id", referencedColumnName = "id", nullable = false)
     private Rol rol;
+
+    // CAMPO PARA BAJA LÓGICA (Soft Delete)
+    // Usamos el valor por defecto 'true' para que los nuevos usuarios nazcan activos
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    // --- MÉTODOS DE USERDETAILS (Obligatorios) ---
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(rol.getNombre()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 }

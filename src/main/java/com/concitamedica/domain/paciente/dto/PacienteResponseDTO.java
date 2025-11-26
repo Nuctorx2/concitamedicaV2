@@ -12,7 +12,8 @@ public record PacienteResponseDTO(
         String telefono,
         String direccion,
         LocalDate fechaNacimiento,
-        String genero
+        String genero,
+        boolean activo
 ) {
     public PacienteResponseDTO(Usuario usuario) {
         this(
@@ -24,7 +25,8 @@ public record PacienteResponseDTO(
                 usuario.getTelefono(),
                 usuario.getDireccion(),
                 usuario.getFechaNacimiento(),
-                usuario.getGenero()
+                usuario.getGenero(),
+                usuario.isEnabled()
         );
     }
 }

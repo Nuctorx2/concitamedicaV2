@@ -1,5 +1,8 @@
 package com.concitamedica.domain.medico;
 
+import com.concitamedica.domain.cita.Cita;
+import com.concitamedica.domain.cita.CitaRepository;
+import com.concitamedica.domain.cita.EstadoCita;
 import com.concitamedica.domain.especialidad.Especialidad;
 import com.concitamedica.domain.especialidad.EspecialidadRepository;
 import com.concitamedica.domain.medico.dto.ActualizacionMedicoDTO;
@@ -17,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +36,7 @@ public class MedicoService {
     private final EspecialidadRepository especialidadRepository;
     private final PasswordEncoder passwordEncoder;
     private final HorarioRepository horarioRepository;
+    private final com.concitamedica.domain.cita.CitaRepository citaRepository;
 
     /**
      * Crea un nuevo médico y le asigna un horario base automáticamente.
@@ -109,6 +114,7 @@ public class MedicoService {
     public List<MedicoResponseDTO> buscarPorEspecialidad(Long especialidadId) {
         return medicoRepository.findAllByEspecialidadId(especialidadId)
                 .stream()
+                .filter(m -> m.getUsuario().isEnabled())
                 .map(this::convertirAMedicoResponseDTO)
                 .toList();
     }
@@ -130,8 +136,6 @@ public class MedicoService {
         usuario.setFechaNacimiento(datos.fechaNacimiento());
         usuario.setGenero(datos.genero());
 
-        // Nota: No actualizamos email ni password aquí por seguridad
-
         // 2. Actualizar Especialidad si cambió
         if (!medico.getEspecialidad().getId().equals(datos.especialidadId())) {
             Especialidad nuevaEsp = especialidadRepository.findById(datos.especialidadId())
@@ -147,8 +151,25 @@ public class MedicoService {
 
     @Transactional
     public void eliminarMedico(Long id) {
-        if (medicoRepository.existsById(id)) {
-            medicoRepository.deleteById(id);
+        Medico medico = medicoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+
+        Usuario usuario = medico.getUsuario();
+
+        // Desactivar el usuario
+        usuario.setEnabled(false);
+        usuarioRepository.save(usuario);
+
+        // Cancelar citas futuras
+        List<Cita> citasFuturas = citaRepository.findAllByMedicoIdAndFechaHoraInicioAfterOrderByFechaHoraInicioAsc(
+                id, LocalDateTime.now()
+        );
+
+        for (Cita cita : citasFuturas) {
+            if (cita.getEstado() == com.concitamedica.domain.cita.EstadoCita.AGENDADA) {
+                cita.setEstado(com.concitamedica.domain.cita.EstadoCita.CANCELADA_ADMIN);
+                citaRepository.save(cita);
+            }
         }
     }
 
@@ -166,7 +187,17 @@ public class MedicoService {
                 u.getFechaNacimiento(),
                 u.getGenero(),
                 medico.getEspecialidad().getNombre(),
-                medico.getEspecialidad().getId()
+                medico.getEspecialidad().getId(),
+                u.isEnabled()
         );
     }
+
+    @Transactional
+    public void reactivarMedico(Long id) {
+        Medico medico = medicoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+        medico.getUsuario().setEnabled(true);
+        usuarioRepository.save(medico.getUsuario());
+    }
+
 }

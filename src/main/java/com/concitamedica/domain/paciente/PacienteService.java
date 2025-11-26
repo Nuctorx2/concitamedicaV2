@@ -31,7 +31,7 @@ import com.concitamedica.domain.medico.MedicoRepository;
 @RequiredArgsConstructor
 public class PacienteService {
 
-    private final MedicoRepository medicoRepository; // Lo necesitarás, así que asegúrate de inyectarlo
+    private final MedicoRepository medicoRepository;
     private final HorarioRepository horarioRepository;
     private final CitaRepository citaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -39,21 +39,25 @@ public class PacienteService {
     private final PasswordEncoder passwordEncoder;
 
     public List<DisponibilidadDTO> calcularDisponibilidad(Long medicoId, LocalDate fecha) {
-        // 1. Verificar si el médico existe
         if (!medicoRepository.existsById(medicoId)) {
             throw new RuntimeException("Médico no encontrado");
         }
 
-        // 2. Encontrar el horario de trabajo del médico para ese día de la semana
+        Medico medico = medicoRepository.findById(medicoId)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+
+        if (!medico.getUsuario().isEnabled()) {
+            return new ArrayList<>();
+        }
+
         DiaSemana dia = DiaSemana.from(fecha);
         Optional<Horario> horarioLaboralOpt = horarioRepository.findByMedicoIdAndDiaSemana(medicoId, dia);
 
         if (horarioLaboralOpt.isEmpty()) {
-            return new ArrayList<>(); // El médico no trabaja ese día, devuelve lista vacía
+            return new ArrayList<>();
         }
         Horario horarioLaboral = horarioLaboralOpt.get();
 
-        // 3. Obtener todas las citas ya agendadas para ese médico en esa fecha
         LocalDateTime inicioDelDia = fecha.atStartOfDay();
         LocalDateTime finDelDia = fecha.atTime(LocalTime.MAX);
         List<Cita> citasAgendadas = citaRepository.findAllByMedicoIdAndFechaHoraInicioBetween(medicoId, inicioDelDia, finDelDia);
@@ -62,7 +66,6 @@ public class PacienteService {
                 .map(cita -> cita.getFechaHoraInicio().toLocalTime())
                 .toList();
 
-        // 4. Generar todos los slots posibles y filtrar los ocupados
         List<DisponibilidadDTO> slotsDisponibles = new ArrayList<>();
         LocalTime horaActual = horarioLaboral.getHoraInicio();
 
@@ -70,21 +73,14 @@ public class PacienteService {
             if (!horasOcupadas.contains(horaActual)) {
                 slotsDisponibles.add(new DisponibilidadDTO(horaActual));
             }
-            horaActual = horaActual.plusMinutes(30); // Avanzamos al siguiente slot
+            horaActual = horaActual.plusMinutes(30);
         }
 
         return slotsDisponibles;
     }
 
-    /**
-     * Agenda una nueva cita para un paciente.
-     * @param datosAgendamiento DTO con los detalles de la cita.
-     * @param emailPaciente El email del paciente autenticado (extraído del token).
-     * @return La entidad Cita recién creada.
-     */
     @Transactional
     public CitaResponseDTO agendarCita(AgendarCitaDTO datosAgendamiento, String emailPaciente) {
-        // 1. Obtener las entidades
         Usuario paciente = usuarioRepository.findByEmail(emailPaciente)
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
@@ -92,30 +88,34 @@ public class PacienteService {
                 .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
 
         LocalDateTime fechaInicioNueva = datosAgendamiento.fechaHoraInicio();
-        LocalDateTime fechaFinNueva = fechaInicioNueva.plusMinutes(30); // Asumimos duración estándar
+        LocalDateTime fechaFinNueva = fechaInicioNueva.plusMinutes(30);
 
-        // --- 🛡️ REGLAS DE NEGOCIO ---
-
-        // 0. Regla de Tiempo: No agendar en el pasado (Validación defensiva)
         if (fechaInicioNueva.isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("No se pueden agendar citas en el pasado.");
         }
 
-        // Preparamos los rangos del día para consultar UNA sola vez
+        boolean tieneCitaPendiente = citaRepository.tieneCitaActivaConEspecialidad(
+                paciente.getId(),
+                medico.getEspecialidad().getId(),
+                LocalDateTime.now()
+        );
+
+        if (tieneCitaPendiente) {
+            throw new IllegalStateException("Ya tienes una cita programada de "
+                    + medico.getEspecialidad().getNombre() + " pendiente. "
+                    + "Debes asistir a esa cita o cancelarla antes de agendar una nueva.");
+        }
+
         LocalDateTime inicioDia = fechaInicioNueva.toLocalDate().atStartOfDay();
         LocalDateTime finDia = fechaInicioNueva.toLocalDate().atTime(LocalTime.MAX);
 
-        // Traemos TODAS las citas del paciente en ese día (Optimizamos DB calls)
         List<Cita> citasDelDia = citaRepository.findAllByPacienteIdAndFechaHoraInicioBetween(
                 paciente.getId(), inicioDia, finDia
         );
 
-        // Iteramos una sola vez sobre las citas del día para validar MÚLTIPLES reglas
         for (Cita citaExistente : citasDelDia) {
             if (citaExistente.getEstado() != EstadoCita.AGENDADA) continue;
 
-            // 1. Regla de Ubicuidad (Mejorada: Detectar Superposición de horarios)
-            // Si la nueva cita empieza antes de que termine la actual Y la nueva termina después de que empiece la actual
             boolean seSuperpone = fechaInicioNueva.isBefore(citaExistente.getFechaHoraFin()) &&
                     fechaFinNueva.isAfter(citaExistente.getFechaHoraInicio());
 
@@ -124,16 +124,8 @@ public class PacienteService {
                         + citaExistente.getMedico().getUsuario().getNombre() + " - "
                         + citaExistente.getFechaHoraInicio().toLocalTime() + ") que se cruza con este horario.");
             }
-
-            // 2. Regla de Especialidad Diaria
-            if (citaExistente.getMedico().getEspecialidad().getId().equals(medico.getEspecialidad().getId())) {
-                throw new IllegalStateException("Restricción diaria: Ya tienes una cita de "
-                        + medico.getEspecialidad().getNombre()
-                        + " agendada para este día. Solo se permite una cita por especialidad al día.");
-            }
         }
 
-        // 3. Validar disponibilidad del médico (Que el slot exista y esté libre en SU agenda)
         List<DisponibilidadDTO> disponibilidad = calcularDisponibilidad(medico.getId(), fechaInicioNueva.toLocalDate());
 
         boolean slotDisponible = disponibilidad.stream()
@@ -143,7 +135,6 @@ public class PacienteService {
             throw new IllegalStateException("El horario seleccionado ya no está disponible en la agenda del médico.");
         }
 
-        // 4. Crear y guardar
         Cita nuevaCita = Cita.builder()
                 .paciente(paciente)
                 .medico(medico)
@@ -167,11 +158,6 @@ public class PacienteService {
         );
     }
 
-    /**
-     * Obtiene las próximas citas de un paciente autenticado.
-     * @param emailPaciente El email del paciente extraído del token.
-     * @return Una lista de DTOs de las próximas citas.
-     */
     @Transactional(readOnly = true)
     public List<CitaResponseDTO> obtenerProximasCitas(String emailPaciente) {
         Usuario paciente = usuarioRepository.findByEmail(emailPaciente)
@@ -183,7 +169,6 @@ public class PacienteService {
                 )
                 .stream()
                 .map(cita -> {
-                    // Construimos el nombre completo del médico
                     String nombreCompletoMedico = cita.getMedico().getUsuario().getNombre() +
                             " " +
                             cita.getMedico().getUsuario().getApellido();
@@ -203,7 +188,6 @@ public class PacienteService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener todos los pacientes para el Admin
     @Transactional(readOnly = true)
     public List<PacienteResponseDTO> obtenerTodosLosPacientes() {
         return usuarioRepository.findByRolNombre("ROLE_PACIENTE").stream()
@@ -211,7 +195,6 @@ public class PacienteService {
                 .toList();
     }
 
-    // Crear paciente desde panel administrativo
     @Transactional
     public PacienteResponseDTO crearPaciente(PacienteCreateDTO datos) {
         if (usuarioRepository.findByEmail(datos.email()).isPresent()) {
@@ -225,7 +208,6 @@ public class PacienteService {
                 .nombre(datos.nombre())
                 .apellido(datos.apellido())
                 .email(datos.email())
-                // Si no envían password, usamos el documento o una genérica
                 .password(passwordEncoder.encode(datos.password() != null ? datos.documento() : "12345678"))
                 .documento(datos.documento())
                 .telefono(datos.telefono())
@@ -239,28 +221,24 @@ public class PacienteService {
         return new PacienteResponseDTO(guardado);
     }
 
-    //Buscar un paciente por ID (para pre-llenar el formulario)
     @Transactional(readOnly = true)
     public PacienteResponseDTO obtenerPacientePorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .filter(u -> u.getRol().getNombre().equals("ROLE_PACIENTE")) // Asegurar que sea paciente
+                .filter(u -> u.getRol().getNombre().equals("ROLE_PACIENTE"))
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
         return new PacienteResponseDTO(usuario);
     }
 
-    //Actualizar paciente existente
     @Transactional
     public PacienteResponseDTO actualizarPaciente(Long id, PacienteActualizarDTO datos) {
         Usuario usuario = usuarioRepository.findById(id)
                 .filter(u -> u.getRol().getNombre().equals("ROLE_PACIENTE"))
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
-        // Validar que si cambia el email, no choque con otro existente
         if (!usuario.getEmail().equals(datos.email()) && usuarioRepository.findByEmail(datos.email()).isPresent()) {
             throw new IllegalArgumentException("El email ya está en uso por otro usuario");
         }
 
-        // Actualizar campos (Mapeo manual)
         usuario.setNombre(datos.nombre());
         usuario.setApellido(datos.apellido());
         usuario.setEmail(datos.email());
@@ -270,11 +248,38 @@ public class PacienteService {
         usuario.setFechaNacimiento(datos.fechaNacimiento());
         usuario.setGenero(datos.genero());
 
-        // No actualizamos password aquí (eso iría en otro endpoint de seguridad)
-
         Usuario actualizado = usuarioRepository.save(usuario);
         return new PacienteResponseDTO(actualizado);
     }
 
+    @Transactional
+    public void eliminarPaciente(Long id) {
+        Usuario paciente = usuarioRepository.findById(id)
+                .filter(u -> u.getRol().getNombre().equals("ROLE_PACIENTE"))
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
+        paciente.setEnabled(false);
+        usuarioRepository.save(paciente);
+
+        List<Cita> citasFuturas = citaRepository.findAllByPacienteIdAndFechaHoraInicioBetween(
+                id, LocalDateTime.now(), LocalDateTime.now().plusYears(2)
+        );
+
+        for (Cita cita : citasFuturas) {
+            if (cita.getEstado() == EstadoCita.AGENDADA) {
+                cita.setEstado(EstadoCita.CANCELADA_ADMIN);
+                citaRepository.save(cita);
+            }
+        }
+    }
+
+    @Transactional
+    public void reactivarPaciente(Long id) {
+        Usuario paciente = usuarioRepository.findById(id)
+                .filter(u -> u.getRol().getNombre().equals("ROLE_PACIENTE"))
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+
+        paciente.setEnabled(true);
+        usuarioRepository.save(paciente);
+    }
 }

@@ -1,7 +1,6 @@
 package com.concitamedica.domain.rol;
 
 public final class Roles {
-    // Hacemos el constructor privado para que nadie pueda instanciar esta clase.
     private Roles() {}
 
     public static final String ADMIN = "ADMIN";

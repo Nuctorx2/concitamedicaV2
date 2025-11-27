@@ -94,4 +94,20 @@ public class HorarioController {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
     }
+
+    // Endpoint para reemplazar toda la agenda
+    @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<HorarioResponseDTO>> actualizarHorarios(
+            @PathVariable Long medicoId,
+            @Valid @RequestBody List<CreacionHorarioDTO> horariosDTO) {
+
+        List<Horario> horariosGuardados = horarioService.reemplazarHorarios(medicoId, horariosDTO);
+
+        List<HorarioResponseDTO> respuesta = horariosGuardados.stream()
+                .map(HorarioResponseDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(respuesta);
+    }
 }

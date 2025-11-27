@@ -26,7 +26,6 @@ public class Rol extends Auditable{
     @Column(nullable = false, unique = true, length = 20)
     private String nombre; // Ej: "Paciente", "Medico", "Admin"
 
-    // ✅ Constructor personalizado para crear roles rápidamente
     public Rol(String nombre) {
         this.nombre = nombre;
     }

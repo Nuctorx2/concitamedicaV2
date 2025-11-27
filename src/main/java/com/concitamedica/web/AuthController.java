@@ -2,21 +2,17 @@ package com.concitamedica.web;
 
 import com.concitamedica.domain.usuario.Usuario;
 import com.concitamedica.domain.usuario.UsuarioService;
-import com.concitamedica.domain.usuario.dto.RegistroUsuarioDTO;
-import com.concitamedica.domain.usuario.dto.UsuarioResponseDTO;
+import com.concitamedica.domain.usuario.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.concitamedica.domain.usuario.dto.LoginRequestDTO;
-import com.concitamedica.domain.usuario.dto.LoginResponseDTO;
 import com.concitamedica.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.concitamedica.domain.usuario.dto.PerfilUpdateDTO;
 import com.concitamedica.domain.usuario.dto.UsuarioResponseDTO;
 
 /**
@@ -82,5 +78,14 @@ public class AuthController {
         Usuario usuarioActualizado = usuarioService.actualizarPerfil(email, datos);
 
         return ResponseEntity.ok(new UsuarioResponseDTO(usuarioActualizado));
+    }
+
+    @PutMapping("/cambiar-password")
+    public ResponseEntity<Void> cambiarPassword(
+            @RequestBody @Valid CambioPasswordDTO datos,
+            Authentication authentication) {
+
+        usuarioService.cambiarPassword(authentication.getName(), datos);
+        return ResponseEntity.noContent().build();
     }
 }

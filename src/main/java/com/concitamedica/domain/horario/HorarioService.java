@@ -11,6 +11,8 @@ import com.concitamedica.domain.horario.dto.HorarioResponseDTO;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -18,13 +20,8 @@ public class HorarioService {
 
     private final HorarioRepository horarioRepository;
     private final MedicoRepository medicoRepository;
+    private final com.concitamedica.domain.cita.CitaRepository citaRepository;
 
-    /**
-     * Crea un nuevo bloque de horario y lo asocia a un médico existente.
-     * @param medicoId El ID del médico al que se le añadirá el horario.
-     * @param datos DTO con la información del nuevo horario.
-     * @return La entidad Horario recién creada.
-     */
     @Transactional
     public Horario crearHorario(Long medicoId, CreacionHorarioDTO datos) {
         // 1. Validar que la hora de fin sea posterior a la de inicio.
@@ -48,11 +45,6 @@ public class HorarioService {
         return horarioRepository.save(nuevoHorario);
     }
 
-    /**
-     * Obtiene todos los bloques de horario de un médico específico.
-     * @param medicoId El ID del médico cuyos horarios se quieren obtener.
-     * @return Una lista de DTOs con la información de cada bloque de horario.
-     */
     @Transactional(readOnly = true)
     public List<HorarioResponseDTO> obtenerHorariosPorMedico(Long medicoId) {
         // 1. Verificar si el médico existe.
@@ -67,11 +59,6 @@ public class HorarioService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Elimina un bloque de horario específico.
-     * @param medicoId El ID del médico al que pertenece el horario (para validación).
-     * @param horarioId El ID del horario a eliminar.
-     */
     @Transactional
     public void eliminarHorario(Long medicoId, Long horarioId) {
         // 1. Buscar el horario por su ID.
@@ -89,21 +76,13 @@ public class HorarioService {
         horarioRepository.delete(horario);
     }
 
-    /**
-     * Crea múltiples bloques de horario para un médico en una sola transacción.
-     * @param medicoId El ID del médico.
-     * @param horariosDTO La lista de DTOs de horarios a crear.
-     * @return La lista de entidades Horario recién creadas.
-     */
     @Transactional
     public List<Horario> crearHorariosEnLote(Long medicoId, List<CreacionHorarioDTO> horariosDTO) {
-        // 1. Buscar el médico.
         Medico medico = medicoRepository.findById(medicoId)
                 .orElseThrow(() -> new RuntimeException("Médico no encontrado con ID: " + medicoId));
 
         List<Horario> nuevosHorarios = new ArrayList<>();
 
-        // 2. Iterar sobre la lista de DTOs, validar y convertir cada uno.
         for (CreacionHorarioDTO dto : horariosDTO) {
             if (dto.horaFin().isBefore(dto.horaInicio()) || dto.horaFin().equals(dto.horaInicio())) {
                 throw new IllegalArgumentException(
@@ -122,5 +101,72 @@ public class HorarioService {
 
         // 3. Guardar todos los nuevos horarios a la vez.
         return horarioRepository.saveAll(nuevosHorarios);
+    }
+
+    @Transactional
+    public List<Horario> reemplazarHorarios(Long medicoId, List<CreacionHorarioDTO> horariosDTO) {
+        Medico medico = medicoRepository.findById(medicoId)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+
+        // 1. Eliminar horarios viejos
+        horarioRepository.deleteAllByMedicoId(medicoId);
+        horarioRepository.flush();
+
+        // 2. Guardar nuevos horarios
+        List<Horario> nuevosHorarios = horariosDTO.stream()
+                .map(dto -> {
+                    if (dto.horaInicio().isAfter(dto.horaFin())) {
+                        throw new IllegalArgumentException("Error en horario " + dto.diaSemana() + ": Inicio posterior a fin.");
+                    }
+                    return Horario.builder()
+                            .medico(medico)
+                            .diaSemana(dto.diaSemana())
+                            .horaInicio(dto.horaInicio())
+                            .horaFin(dto.horaFin())
+                            .build();
+                })
+                .map(horarioRepository::save)
+                .toList();
+
+        // 3. 🧹 AUDITORÍA DE CITAS (Limpieza de conflictos)
+        validarYCancelarCitasConflictivas(medicoId, nuevosHorarios);
+
+        return nuevosHorarios;
+    }
+
+    private void validarYCancelarCitasConflictivas(Long medicoId, List<Horario> nuevosHorarios) {
+        // Traer citas futuras activas
+        List<com.concitamedica.domain.cita.Cita> citasFuturas =
+                citaRepository.findByMedicoIdAndFechaHoraInicioAfterAndEstado(
+                        medicoId, java.time.LocalDateTime.now(), com.concitamedica.domain.cita.EstadoCita.AGENDADA
+                );
+
+        for (com.concitamedica.domain.cita.Cita cita : citasFuturas) {
+            boolean horarioValido = false;
+
+            // Convertir fecha cita a DiaSemana (LUNES, MARTES...)
+            DiaSemana diaCita = DiaSemana.from(cita.getFechaHoraInicio().toLocalDate());
+            LocalTime horaCita = cita.getFechaHoraInicio().toLocalTime();
+
+            // Buscar si existe un horario nuevo que cubra este día y hora
+            for (Horario horario : nuevosHorarios) {
+                if (horario.getDiaSemana() == diaCita) {
+                    // Verificar si la hora de la cita está dentro del rango nuevo
+                    // (horaCita >= inicio && horaCita < fin)
+                    if (!horaCita.isBefore(horario.getHoraInicio()) && horaCita.isBefore(horario.getHoraFin())) {
+                        horarioValido = true;
+                        break;
+                    }
+                }
+            }
+
+            // Si después de revisar los nuevos horarios, la cita quedó "fuera de lugar"
+            if (!horarioValido) {
+                cita.setEstado(com.concitamedica.domain.cita.EstadoCita.CANCELADA_ADMIN);
+                // Opcional: Podrías agregar un campo 'motivoCancelacion' en la entidad Cita
+                // cita.setMotivo("Cambio de horario del médico");
+                citaRepository.save(cita);
+            }
+        }
     }
 }

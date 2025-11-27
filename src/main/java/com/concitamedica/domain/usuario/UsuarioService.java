@@ -2,6 +2,7 @@ package com.concitamedica.domain.usuario;
 
 import com.concitamedica.domain.rol.Rol;
 import com.concitamedica.domain.rol.RolRepository;
+import com.concitamedica.domain.usuario.dto.CambioPasswordDTO;
 import com.concitamedica.domain.usuario.dto.PerfilUpdateDTO;
 import com.concitamedica.domain.usuario.dto.RegistroUsuarioDTO;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,6 @@ public class UsuarioService implements UserDetailsService{
             throw new IllegalStateException("El correo electrónico ya está en uso.");
         }
 
-        // 🔒 HARDCODED: Siempre asignamos ROLE_PACIENTE en el registro público
         String nombreRol = "ROLE_PACIENTE";
 
         Rol rol = rolRepository.findByNombre(nombreRol)
@@ -55,10 +55,6 @@ public class UsuarioService implements UserDetailsService{
         return usuarioRepository.save(nuevoUsuario);
     }
 
-    /**
-     * Método auxiliar para obtener la entidad completa del usuario.
-     * Se usará en el endpoint /me.
-     */
     @Transactional(readOnly = true)
     public Usuario buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
@@ -93,5 +89,20 @@ public class UsuarioService implements UserDetailsService{
         usuario.setGenero(datos.genero());
 
         return usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public void cambiarPassword(String email, CambioPasswordDTO datos) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Verificar que la contraseña actual sea correcta
+        if (!passwordEncoder.matches(datos.passwordActual(), usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+        }
+
+        // 2. Encriptar y guardar la nueva
+        usuario.setPassword(passwordEncoder.encode(datos.nuevaPassword()));
+        usuarioRepository.save(usuario);
     }
 }

@@ -29,4 +29,11 @@ public record PacienteResponseDTO(
                 usuario.isEnabled()
         );
     }
+
+    public String getNombre() { return nombre; }
+    public String getApellido() { return apellido; }
+    public String getDocumento() { return documento; }
+    public String getEmail() { return email; }
+    public String getTelefono() { return telefono; }
+    public boolean isActivo() { return activo; }
 }

@@ -12,4 +12,12 @@ public record CitaResponseDTO(
         LocalDateTime fechaHoraInicio,
         LocalDateTime fechaHoraFin,
         String estado
-) {}
+) {
+    public CitaResponseDTO {}
+
+    public LocalDateTime getFechaHoraInicio() { return fechaHoraInicio; }
+    public String getNombrePaciente() { return nombrePaciente; }
+    public String getNombreMedico() { return nombreMedico; }
+    public String getEspecialidad() { return especialidad; }
+    public String getEstado() { return estado; }
+}

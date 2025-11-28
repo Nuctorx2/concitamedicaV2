@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              name="MedicosReport"
+              pageWidth="595" pageHeight="842"
+              columnWidth="535"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              uuid="e7eebaa4-068b-407f-bf79-8bc4c063974a">
+
+    <field name="nombre" class="java.lang.String"/>
+    <field name="apellido" class="java.lang.String"/>
+    <field name="especialidadNombre" class="java.lang.String"/>
+    <field name="email" class="java.lang.String"/>
+    <field name="telefono" class="java.lang.String"/>
+
+    <title>
+        <band height="72">
+            <frame>
+                <reportElement mode="Opaque" x="-20" y="-20" width="595" height="92" backcolor="#006655" uuid="067e5760-2a3c-4197-92e5-afbec0f9ce47"/>
+                <staticText>
+                    <reportElement x="20" y="20" width="300" height="43" forecolor="#FFFFFF" uuid="7fd19f7a-054f-4cd0-a605-7f760f6c3674"/>
+                    <textElement>
+                        <font size="34" isBold="true"/>
+                    </textElement>
+                    <text><![CDATA[ConCitaMedica]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="395" y="43" width="180" height="20" forecolor="#FFFFFF" uuid="d542e825-157c-465d-8511-3673d07f7f3a"/>
+                    <textElement textAlignment="Right">
+                        <font size="14" isBold="false"/>
+                    </textElement>
+                    <text><![CDATA[Directorio Médico]]></text>
+                </staticText>
+            </frame>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="13"/>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="21">
+            <line>
+                <reportElement x="-20" y="20" width="595" height="1" forecolor="#666666" uuid="ca533965-9162-4dc2-8a9e-2c99b0db8e3e"/>
+            </line>
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="150" height="20" forecolor="#006655" backcolor="#E6E6E6" uuid="55735968-342c-4d29-8dc1-db2263a44d11"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Médico]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="150" y="0" width="130" height="20" forecolor="#006655" backcolor="#E6E6E6" uuid="e9b64414-ad92-4257-a8f2-63a23c460255"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Especialidad]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="280" y="0" width="150" height="20" forecolor="#006655" backcolor="#E6E6E6" uuid="12ce83f4-fe29-45f6-b1d5-5e016771ec1b"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Email]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="430" y="0" width="125" height="20" forecolor="#006655" backcolor="#E6E6E6" uuid="e2a0186b-afad-426b-b9f2-2152394df140"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Teléfono]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20">
+            <line>
+                <reportElement positionType="FixRelativeToBottom" x="0" y="19" width="555" height="1" uuid="305d3455-6f0a-49e7-ad2a-055974675fd4"/>
+            </line>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="0" y="0" width="150" height="20" uuid="1324277f-1cf1-4cc2-a5f3-88ededc0ff6e"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{nombre} + " " + $F{apellido}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="150" y="0" width="130" height="20" uuid="b9c4d404-fc0e-4d41-865f-6420a3a50a47"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{especialidadNombre}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="280" y="0" width="150" height="20" uuid="72ac6471-485e-4148-85a8-56c9d5d59f70"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="430" y="0" width="125" height="20" uuid="c7d9f004-ba41-4399-bc4c-5a5ef181e7bf"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{telefono}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="17">
+            <textField>
+                <reportElement mode="Opaque" x="0" y="4" width="515" height="13" backcolor="#E6E6E6" uuid="c7f5dcbd-921c-4949-8f5c-3922c35efa2c"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["Página "+$V{PAGE_NUMBER}+" de"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement mode="Opaque" x="515" y="4" width="40" height="13" backcolor="#E6E6E6" uuid="0f776560-e86c-4c18-bb5a-76c0842abe06"/>
+                <textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField pattern="EEEEE dd MMMMM yyyy">
+                <reportElement x="0" y="4" width="100" height="13" uuid="4f042a9c-a347-4667-9795-ae1c1612e30f"/>
+                <textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+</jasperReport>

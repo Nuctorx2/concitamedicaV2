@@ -91,7 +91,7 @@ public class DataInitializer {
                     .nombre(nombre)
                     .apellido(apellido)
                     .documento(documento) // Usamos el documento explícito que pasamos
-                    .telefono("555-0000")
+                    .telefono("3110189856")
                     .direccion("Consultorio Central")
                     .email(email)
                     .password(passwordEncoder.encode(password))

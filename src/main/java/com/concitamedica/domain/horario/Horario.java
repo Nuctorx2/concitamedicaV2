@@ -23,10 +23,10 @@ public class Horario extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medico_id", nullable = false)
-    @JsonBackReference // ✅ Indica que esta es la "parte secundaria". No se serializará.
+    @JsonBackReference
     private Medico medico;
 
-    @Enumerated(EnumType.STRING) // Guarda el nombre del día ("LUNES") en la BD, no un número.
+    @Enumerated(EnumType.STRING)
     @Column(name = "dia_semana", nullable = false)
     private DiaSemana diaSemana;
 

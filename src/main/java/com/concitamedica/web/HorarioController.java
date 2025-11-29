@@ -13,16 +13,12 @@ import com.concitamedica.domain.horario.dto.HorarioResponseDTO;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/medicos/{medicoId}/horarios") // ✅ URL anidada
+@RequestMapping("/api/admin/medicos/{medicoId}/horarios")
 @RequiredArgsConstructor
 public class HorarioController {
 
     private final HorarioService horarioService;
 
-    /**
-     * Endpoint para añadir un nuevo bloque de horario a un médico.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Horario> anadirHorario(
@@ -32,17 +28,12 @@ public class HorarioController {
             Horario nuevoHorario = horarioService.crearHorario(medicoId, datos);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoHorario);
         } catch (IllegalArgumentException e) {
-            // Si el servicio lanza un error de validación (ej. horaFin antes de horaInicio)
-            return ResponseEntity.badRequest().build(); // Devuelve 400 Bad Request
+            return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
-            // Si el médico no se encuentra
-            return ResponseEntity.notFound().build(); // Devuelve 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 
-    /**
-     * Endpoint para añadir múltiples bloques de horario a un médico en una sola petición.
-     */
     @PostMapping("/lote")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Horario>> anadirHorariosEnLote(
@@ -58,10 +49,6 @@ public class HorarioController {
         }
     }
 
-    /**
-     * Endpoint para obtener todos los horarios de un médico específico.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<HorarioResponseDTO>> obtenerHorariosPorMedico(@PathVariable Long medicoId) {
@@ -69,15 +56,10 @@ public class HorarioController {
             List<HorarioResponseDTO> horarios = horarioService.obtenerHorariosPorMedico(medicoId);
             return ResponseEntity.ok(horarios);
         } catch (RuntimeException e) {
-            // Si el médico no se encuentra
             return ResponseEntity.notFound().build();
         }
     }
 
-    /**
-     * Endpoint para eliminar un bloque de horario de un médico.
-     * Solo accesible para usuarios con el rol 'ADMIN'.
-     */
     @DeleteMapping("/{horarioId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarHorario(
@@ -85,29 +67,23 @@ public class HorarioController {
             @PathVariable Long horarioId) {
         try {
             horarioService.eliminarHorario(medicoId, horarioId);
-            return ResponseEntity.noContent().build(); // 204 No Content
+            return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
-            // Si el horario no pertenece al médico
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (RuntimeException e) {
-            // Si el horario o el médico no se encuentran
-            return ResponseEntity.notFound().build(); // 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 
-    // Endpoint para reemplazar toda la agenda
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<HorarioResponseDTO>> actualizarHorarios(
             @PathVariable Long medicoId,
             @Valid @RequestBody List<CreacionHorarioDTO> horariosDTO) {
-
         List<Horario> horariosGuardados = horarioService.reemplazarHorarios(medicoId, horariosDTO);
-
         List<HorarioResponseDTO> respuesta = horariosGuardados.stream()
                 .map(HorarioResponseDTO::fromEntity)
                 .toList();
-
         return ResponseEntity.ok(respuesta);
     }
 }

@@ -23,17 +23,15 @@ public class Medico extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación Uno a Uno: Un perfil de médico corresponde a un único usuario.
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", referencedColumnName = "id", nullable = false, unique = true)
     private Usuario usuario;
 
-    // Relación Muchos a Uno: Muchos médicos pueden tener la misma especialidad.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "especialidad_id", referencedColumnName = "id", nullable = false)
     private Especialidad especialidad;
 
     @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference // Indica que esta es la "parte principal" de la relación para JSON.
+    @JsonManagedReference
     private List<Horario> horarios;
 }

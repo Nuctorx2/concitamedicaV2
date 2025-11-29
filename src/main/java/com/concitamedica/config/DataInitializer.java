@@ -44,30 +44,29 @@ public class DataInitializer {
         Rol rolMedico = rolRepository.findByNombre(ROLE_MEDICO).orElseThrow();
         Rol rolPaciente = rolRepository.findByNombre(ROLE_PACIENTE).orElseThrow();
 
-        // --- 1. ADMIN ---
+        // Admin
         crearUsuarioSiNoExiste("Admin", "Sistema", "99999999", "admin@concitamedica.com", "admin123", rolAdmin);
 
-        // --- 2. PACIENTES ---
+        // Pacientes
         crearUsuarioSiNoExiste("Sofia", "Navarro", "10000001", "sofia.navarro@email.com", "paciente123", rolPaciente);
         crearUsuarioSiNoExiste("Carlos", "Rojas", "10000002", "carlos.rojas@email.com", "paciente123", rolPaciente);
 
-        // --- 3. MÉDICOS (2 por especialidad) ---
-        // ✅ AHORA PASAMOS DOCUMENTOS VÁLIDOS (8 dígitos)
+        // Medicos
 
-        // Especialidad: Medicina General
+
+        // Medicina General
         crearMedicoConHorario("Juan", "Pérez", "20000001", "juan.perez@email.com", "Medicina General", rolMedico);
         crearMedicoConHorario("Laura", "Gómez", "20000002", "laura.gomez@email.com", "Medicina General", rolMedico);
 
-        // Especialidad: Odontología
+        // Odontología
         crearMedicoConHorario("Pedro", "Sánchez", "30000001", "pedro.sanchez@email.com", "Odontología", rolMedico);
         crearMedicoConHorario("Lucía", "Díaz", "30000002", "lucia.diaz@email.com", "Odontología", rolMedico);
 
-        // Especialidad: Dermatología
+        // Dermatología
         crearMedicoConHorario("Ana", "Martínez", "40000001", "ana.martinez@email.com", "Dermatología", rolMedico);
         crearMedicoConHorario("Roberto", "Fernández", "40000002", "roberto.fernandez@email.com", "Dermatología", rolMedico);
     }
 
-    // --- MÉTODOS AUXILIARES ---
 
     private void crearRoles() {
         if (rolRepository.count() == 0) {
@@ -90,7 +89,7 @@ public class DataInitializer {
             Usuario nuevoUsuario = Usuario.builder()
                     .nombre(nombre)
                     .apellido(apellido)
-                    .documento(documento) // Usamos el documento explícito que pasamos
+                    .documento(documento)
                     .telefono("3110189856")
                     .direccion("Consultorio Central")
                     .email(email)
@@ -103,12 +102,12 @@ public class DataInitializer {
         });
     }
 
-    // 👇 MÉTODO ACTUALIZADO: Ahora recibe 'documento'
+
     private void crearMedicoConHorario(String nombre, String apellido, String documento, String email, String especialidadNombre, Rol rolMedico) {
-        // 1. Crear Usuario
+
         Usuario usuario = crearUsuarioSiNoExiste(nombre, apellido, documento, email, "medico123", rolMedico);
 
-        // 2. Crear Perfil Médico (si no existe)
+
         if (medicoRepository.findByUsuario(usuario).isEmpty()) {
             Especialidad especialidad = especialidadRepository.findByNombre(especialidadNombre).orElseThrow();
 
@@ -119,7 +118,7 @@ public class DataInitializer {
 
             medico = medicoRepository.save(medico);
 
-            // 3. Asignar Horarios
+
             asignarHorarioBase(medico);
         }
     }
@@ -134,8 +133,8 @@ public class DataInitializer {
                 Horario horario = Horario.builder()
                         .medico(medico)
                         .diaSemana(dia)
-                        .horaInicio(LocalTime.of(8, 0))  // 08:00 AM
-                        .horaFin(LocalTime.of(17, 0))    // 05:00 PM
+                        .horaInicio(LocalTime.of(8, 0))
+                        .horaFin(LocalTime.of(17, 0))
                         .build();
                 horarioRepository.save(horario);
             }

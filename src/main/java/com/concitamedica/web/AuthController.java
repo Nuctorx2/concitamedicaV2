@@ -15,11 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.concitamedica.domain.usuario.dto.UsuarioResponseDTO;
 
-/**
- * Controlador REST para manejar las operaciones de autenticación como registro y login.
- */
-@RestController // Combina @Controller y @ResponseBody. Indica que los métodos devuelven datos (JSON).
-@RequestMapping("/api/auth") // Define la URL base para todos los endpoints de este controlador.
+@RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -27,22 +24,14 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    /**
-     * Endpoint para registrar un nuevo paciente.
-     * Escucha en POST /api/auth/register.
-     * @param datosRegistro El cuerpo de la petición HTTP, convertido a un DTO.
-     * @return Una respuesta HTTP con el usuario creado y un estado 201 (Created).
-     */
     @PostMapping("/register")
     public ResponseEntity<Usuario> registrar(@Valid @RequestBody RegistroUsuarioDTO datosRegistro) {
         Usuario nuevoUsuario = usuarioService.registrarUsuario(datosRegistro);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
-        // 1. Spring Security se encarga de la autenticación.
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.email(),
@@ -50,7 +39,6 @@ public class AuthController {
                 )
         );
 
-        // 2. Si la autenticación es exitosa, generamos el token.
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtService.generateToken(userDetails);
 
@@ -59,7 +47,6 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponseDTO> obtenerUsuarioActual(Authentication authentication) {
-        // authentication.getName() obtiene el email del token JWT
         Usuario usuario = usuarioService.buscarPorEmail(authentication.getName());
         return ResponseEntity.ok(new UsuarioResponseDTO(usuario));
     }
@@ -73,10 +60,8 @@ public class AuthController {
     public ResponseEntity<UsuarioResponseDTO> actualizarPerfil(
             @RequestBody @Valid PerfilUpdateDTO datos,
             Authentication authentication) {
-
         String email = authentication.getName();
         Usuario usuarioActualizado = usuarioService.actualizarPerfil(email, datos);
-
         return ResponseEntity.ok(new UsuarioResponseDTO(usuarioActualizado));
     }
 
@@ -84,7 +69,6 @@ public class AuthController {
     public ResponseEntity<Void> cambiarPassword(
             @RequestBody @Valid CambioPasswordDTO datos,
             Authentication authentication) {
-
         usuarioService.cambiarPassword(authentication.getName(), datos);
         return ResponseEntity.noContent().build();
     }

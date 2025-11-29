@@ -24,31 +24,25 @@ public class AdminCitaController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CitaResponseDTO>> listarTodasLasCitas() {
-        // Usamos el método ordenado del repositorio (asegúrate de tenerlo en CitaRepository)
-        // Si no lo agregaste, usa citaRepository.findAll()
         List<CitaResponseDTO> citas = citaRepository.findAllByOrderByFechaHoraInicioDesc().stream()
-                .map(this::mapToDTO) // Usamos el helper para limpiar el código
+                .map(this::mapToDTO)
                 .toList();
 
         return ResponseEntity.ok(citas);
     }
 
-    // 👇 ESTE ES EL MÉTODO NUEVO QUE NECESITAMOS
     @PutMapping("/{id}/cancelar")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<Void> cancelarCita(@PathVariable Long id) {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cita no encontrada"));
-
-        // Cambiamos el estado
         cita.setEstado(EstadoCita.CANCELADA_ADMIN);
         citaRepository.save(cita);
 
         return ResponseEntity.noContent().build();
     }
 
-    // Helper privado para no repetir la lógica de mapeo
     private CitaResponseDTO mapToDTO(Cita cita) {
         String nombreMedico = cita.getMedico().getUsuario().getNombre() + " " + cita.getMedico().getUsuario().getApellido();
         String nombrePaciente = cita.getPaciente().getNombre() + " " + cita.getPaciente().getApellido();

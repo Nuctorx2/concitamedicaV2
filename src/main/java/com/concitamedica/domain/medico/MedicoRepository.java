@@ -6,9 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositorio para la entidad Medico.
- */
 @Repository
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
     List<Medico> findAllByEspecialidadId(Long especialidadId);

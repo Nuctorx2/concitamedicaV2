@@ -36,30 +36,21 @@ public class PacienteController {
         return ResponseEntity.ok(disponibilidad);
     }
 
-    /**
-     * Endpoint para que un paciente agende una nueva cita.
-     */
     @PostMapping("/citas")
     @PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<CitaResponseDTO> agendarCita(
             @RequestBody @Valid AgendarCitaDTO datosAgendamiento,
             Authentication authentication) {
-
-        // El email del usuario autenticado se extrae del objeto Authentication
         String emailPaciente = authentication.getName();
 
         try {
             CitaResponseDTO nuevaCita = pacienteService.agendarCita(datosAgendamiento, emailPaciente);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCita);
         } catch (IllegalStateException e) {
-            // Capturamos el error si el horario ya no está disponible
-            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409 Conflict
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
-    /**
-     * Endpoint para que un paciente vea su lista de próximas citas.
-     */
     @GetMapping("/citas/proximas")
     @PreAuthorize("hasRole('PACIENTE')")
     public ResponseEntity<List<CitaResponseDTO>> obtenerProximasCitas(Authentication authentication) {

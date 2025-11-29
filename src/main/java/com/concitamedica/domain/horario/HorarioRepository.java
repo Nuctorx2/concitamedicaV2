@@ -3,9 +3,7 @@ package com.concitamedica.domain.horario;
 import com.concitamedica.domain.medico.Medico;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.concitamedica.domain.horario.DiaSemana;
 import java.util.Optional;
-import java.util.Arrays;
 import java.util.List;
 
 

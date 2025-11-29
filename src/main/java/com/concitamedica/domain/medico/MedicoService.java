@@ -38,9 +38,6 @@ public class MedicoService {
     private final HorarioRepository horarioRepository;
     private final com.concitamedica.domain.cita.CitaRepository citaRepository;
 
-    /**
-     * Crea un nuevo médico y le asigna un horario base automáticamente.
-     */
     @Transactional
     public Medico crearMedico(CreacionMedicoDTO datos) {
         if (usuarioRepository.findByEmail(datos.email()).isPresent()) {
@@ -127,7 +124,6 @@ public class MedicoService {
 
         Usuario usuario = medico.getUsuario();
 
-        // 1. Actualizar datos de Usuario (Todos los campos)
         usuario.setNombre(datos.nombre());
         usuario.setApellido(datos.apellido());
         usuario.setDocumento(datos.documento());
@@ -136,7 +132,6 @@ public class MedicoService {
         usuario.setFechaNacimiento(datos.fechaNacimiento());
         usuario.setGenero(datos.genero());
 
-        // 2. Actualizar Especialidad si cambió
         if (!medico.getEspecialidad().getId().equals(datos.especialidadId())) {
             Especialidad nuevaEsp = especialidadRepository.findById(datos.especialidadId())
                     .orElseThrow(() -> new RuntimeException("Especialidad no encontrada"));
@@ -156,11 +151,9 @@ public class MedicoService {
 
         Usuario usuario = medico.getUsuario();
 
-        // Desactivar el usuario
         usuario.setEnabled(false);
         usuarioRepository.save(usuario);
 
-        // Cancelar citas futuras
         List<Cita> citasFuturas = citaRepository.findAllByMedicoIdAndFechaHoraInicioAfterOrderByFechaHoraInicioAsc(
                 id, LocalDateTime.now()
         );

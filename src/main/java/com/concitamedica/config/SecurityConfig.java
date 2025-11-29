@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",          // Tus endpoints de autenticación
+                                "/api/auth/**",          // Endpoints de autenticación
                                 "/swagger-ui.html",      // La página de Swagger UI
                                 "/swagger-ui/**",      // Los assets estáticos de Swagger UI
                                 "/v3/api-docs",        // La definición de la API (JSON)

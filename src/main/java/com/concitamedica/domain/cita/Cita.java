@@ -21,12 +21,10 @@ public class Cita extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación Muchos a Uno: Un paciente (usuario) puede tener muchas citas.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "paciente_id", nullable = false)
     private Usuario paciente;
 
-    // Relación Muchos a Uno: Un médico puede tener muchas citas.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medico_id", nullable = false)
     private Medico medico;

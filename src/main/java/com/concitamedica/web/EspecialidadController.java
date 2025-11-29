@@ -16,9 +16,6 @@ public class EspecialidadController {
 
     private final EspecialidadService especialidadService;
 
-    /**
-     * Endpoint público (o para usuarios autenticados) para llenar selects.
-     */
     @GetMapping
     public ResponseEntity<List<EspecialidadDTO>> listarEspecialidades() {
         return ResponseEntity.ok(especialidadService.obtenerTodas());

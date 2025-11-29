@@ -16,10 +16,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Entidad que representa la tabla 'usuarios' en la base de datos.
- * Contiene la información de login y los datos personales de todos los usuarios del sistema.
- */
 @Entity
 @Table(name = "usuarios")
 @Getter

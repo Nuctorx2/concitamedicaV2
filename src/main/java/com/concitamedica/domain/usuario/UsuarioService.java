@@ -25,10 +25,6 @@ public class UsuarioService implements UserDetailsService{
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Registra un nuevo usuario forzando el rol de PACIENTE.
-     * SEGURIDAD: Ignoramos el campo 'rol' del DTO para evitar elevación de privilegios.
-     */
     @Transactional
     public Usuario registrarUsuario(RegistroUsuarioDTO datosRegistro) {
         if (usuarioRepository.findByEmail(datosRegistro.email()).isPresent()) {
@@ -96,12 +92,10 @@ public class UsuarioService implements UserDetailsService{
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Verificar que la contraseña actual sea correcta
         if (!passwordEncoder.matches(datos.passwordActual(), usuario.getPassword())) {
             throw new IllegalArgumentException("La contraseña actual es incorrecta.");
         }
 
-        // 2. Encriptar y guardar la nueva
         usuario.setPassword(passwordEncoder.encode(datos.nuevaPassword()));
         usuarioRepository.save(usuario);
     }

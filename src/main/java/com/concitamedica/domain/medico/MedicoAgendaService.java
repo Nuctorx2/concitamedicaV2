@@ -21,15 +21,13 @@ public class MedicoAgendaService {
 
     @Transactional(readOnly = true)
     public List<CitaMedicoResponseDTO> obtenerAgendaDelDia(String emailMedico, LocalDate fecha) {
-        // 1. Buscar el perfil del médico a partir de su email de usuario
-        Medico medico = medicoRepository.findByUsuarioEmail(emailMedico) // ¡Nuevo método de repositorio!
+
+        Medico medico = medicoRepository.findByUsuarioEmail(emailMedico)
                 .orElseThrow(() -> new RuntimeException("Perfil de médico no encontrado"));
 
-        // 2. Definir el rango de búsqueda (el día completo)
         LocalDateTime inicioDelDia = fecha.atStartOfDay();
         LocalDateTime finDelDia = fecha.atTime(LocalTime.MAX);
 
-        // 3. Buscar las citas y mapearlas al DTO
         return citaRepository.findAllByMedicoIdAndFechaHoraInicioBetween(medico.getId(), inicioDelDia, finDelDia)
                 .stream()
                 .map(cita -> new CitaMedicoResponseDTO(

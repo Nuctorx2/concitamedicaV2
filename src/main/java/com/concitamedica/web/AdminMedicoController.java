@@ -15,10 +15,9 @@ import java.util.List;
 import com.concitamedica.domain.medico.dto.MedicoResponseDTO;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import com.concitamedica.domain.rol.Roles;
 
 @RestController
-@RequestMapping("/api/admin/medicos") // ✅ URL base para la administración de médicos
+@RequestMapping("/api/admin/medicos")
 @RequiredArgsConstructor
 public class AdminMedicoController {
 
@@ -42,8 +41,8 @@ public class AdminMedicoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return medicoService.obtenerMedicoPorId(id)
-                .map(medico -> ResponseEntity.ok(medico)) // Si se encuentra, devuelve 200 OK con el médico
-                .orElse(ResponseEntity.notFound().build()); // Si no, devuelve un 404 Not Found
+                .map(medico -> ResponseEntity.ok(medico))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
@@ -55,7 +54,6 @@ public class AdminMedicoController {
             MedicoResponseDTO medicoActualizado = medicoService.actualizarMedico(id, datos);
             return ResponseEntity.ok(medicoActualizado);
         } catch (RuntimeException e) {
-            // Si el servicio lanza una excepción (ej. médico no encontrado), devolvemos 404.
             return ResponseEntity.notFound().build();
         }
     }
@@ -65,7 +63,6 @@ public class AdminMedicoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         medicoService.eliminarMedico(id);
-        // Para una operación DELETE exitosa, se devuelve 204 No Content.
         return ResponseEntity.noContent().build();
     }
 

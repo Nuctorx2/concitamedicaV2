@@ -9,11 +9,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Clase base para entidades auditables.
- * Los valores de estos campos serán gestionados directamente por la base de datos
- * a través de triggers.
- */
 @MappedSuperclass
 @Getter
 @Setter
